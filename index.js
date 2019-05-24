@@ -13,10 +13,29 @@ const mongoose = require('mongoose');
 
 //importing body parser module
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser')
+const globalErrorMiddleware = require('./middlewares/appErrorHandler');
+const globalRouteLoggerMiddleware = require('./middlewares/routeLogger')
 
 //middlewares
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended:false }))
+app.use(cookieParser())
+
+
+app.use(globalErrorMiddleware.globalErrorHandler)
+
+
+app.use(globalRouteLoggerMiddleware.logIp)
+
+//imprting the blogSchema
+//bootstrap models
+let modelsPath = './models';
+fs.readdirSync(modelsPath).forEach(function(file){
+    if(~file.indexOf('.js')) 
+    console.log(file)
+    require(modelsPath+'/'+file)
+})//end bootstrap models
 
 
 //Bootstrap route 
@@ -35,15 +54,9 @@ fs.readdirSync(routesPath).forEach(function(file){
 
 });
 
-
-//imprting the blogSchema
-//bootstrap models
-let modelsPath = './models';
-fs.readdirSync(modelsPath).forEach(function(file){
-    if(~file.indexOf('.js')) 
-    console.log(file)
-    require(modelsPath+'/'+file)
-})//end bootstrap models
+//calling global 404 error after route
+app.use(globalErrorMiddleware.globalNotFoundHandler);
+//end global 404 handler
 
 //listening the serve at port no 3000 . creating a local server
 app.listen(appConfig.port,()=>{
